@@ -109,12 +109,12 @@ class AgentDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            cursor.execute("select completed_missions as completed,failed_missions as failed,count(*) as count from agents where id = %s"(id,))
+            cursor.execute("select completed_missions as completed,failed_missions as failed,count(*) as count from agents where id = %s",(id,))
             result = cursor.fetchall()
-            return {"completed":result["completed"],
-                    "failed":result["failed"],
-                    "total":result["completed"] + result["failed"],
-                    "success_rate":(result["completed"] / (result["completed"] + result["failed"])) * 100}
+            return {"completed":result[0]["completed"],
+                    "failed":result[0]["failed"],
+                    "total":result[0]["completed"] + result[0]["failed"],
+                    "success_rate":(result[0]["completed"] / (result[0]["completed"] + result[0]["failed"])) * 100}
         
         finally:
             cursor.close()

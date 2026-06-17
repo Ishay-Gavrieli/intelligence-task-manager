@@ -5,17 +5,17 @@ instance_connection = DB_connection()
 
 
 class MissionDB:
-    def create_mission(self,data):
+    def create_mission(self,data:dict):
         conn = instance_connection.get_connection()
         cursor = conn.cursor(dictionary=True)
         risk_level = data["difficulty"] * 2 + data["importance"]
-        risk = risk_level(risk_level)
+        risk = self.check_risk_level(risk_level)
 
         try:
             sql = "insert into missions(title,description,location,difficulty,importance,status,risk_level) values(%s,%s,%s,%s,%s,%s,%s)"
-            result = cursor.execute(sql,(data["title"],data["description"],data["location"],data["difficulty"],data["importance"],data["status"],risk))
+            cursor.execute(sql,(data["title"],data["description"],data["location"],data["difficulty"],data["importance"],data["status"],risk))
             conn.commit()
-            return result
+            return {"succes":True}
 
         finally:
             cursor.close()
@@ -51,23 +51,23 @@ class MissionDB:
     def assign_mission(self,m_id, a_id):
         conn = instance_connection.get_connection()
         cursor = conn.cursor(dictionary=True)
-        agent = cursor.execute("select is_active from agents where id = %s"(a_id,))
+        agent = cursor.execute("select is_active from agents where id = %s",(a_id,))
         if not agent:
-            raise HTTPException(status_code=400,detail="error")
+                raise HTTPException(status_code=400,detail="error a")
 
-        count = cursor.execute("select count(*) as count from missions where id = %s and status =IN_PROGRESS or status= ASSIGNED"(a_id,))
+        count = cursor.execute("select count(*) as count from missions where id = %s and status = IN_PROGRESS or status = ASSIGNED",(a_id,))
         if count["count"] >= 3:
-            raise HTTPException(status_code=400,detail="error")
+            raise HTTPException(status_code=400,detail="error b")
 
-        level = cursor.execute("select risk_level as level from missions where id = %s"(m_id,))
+        level = cursor.execute("select risk_level as level from missions where id = %s",(m_id,))
         if level["level"] == "CRITICAL":
-            rank = cursor.execute("select agent_rank as rank from agents where id = %s"(a_id,))
+            rank = cursor.execute("select agent_rank as rank from agents where id = %s",(a_id,))
             if rank["rank"] != "Commander":
-                raise HTTPException(status_code=400,detail="error")
+                raise HTTPException(status_code=400,detail="error c")
         
-        status = cursor.execute("select status as status from missions where id = %s"(m_id,))
+        status = cursor.execute("select status as status from missions where id = %s",(m_id,))
         if status["status"] != "NEW":
-             raise HTTPException(status_code=400,detail="error")
+             raise HTTPException(status_code=400,detail="error d")
 
         try:
             cursor.execute("update missions set status = ASSIGNED assigned_agent_id = %s where id = %s ",(a_id,m_id))
@@ -82,16 +82,16 @@ class MissionDB:
     def update_mission_status(self,id, status):
         conn = instance_connection.get_connection()
         cursor = conn.cursor(dictionary=True)
-        status = cursor.execute("select status as status from missions where id = %s"(id,))
+        status = cursor.execute("select status as status from missions where id = %s",(id,))
         if status["status"] == "ASSIGNED":
             if status["status"] != "IN_PROGRESS":
-                raise HTTPException(status_code=400,detail="error")
+                raise HTTPException(status_code=400,detail="error a")
         if status["status"] == "CANCELLED":
             if status["status"] != "NEW" or status["status"] != "ASSIGNED":
-                raise HTTPException(status_code=400,detail="error")
+                raise HTTPException(status_code=400,detail="error b")
         if status["status"] == "failed" or status["status"] == status["status"]:
             if status["status"] != "IN_PROGRESS":
-                raise HTTPException(status_code=400,detail="error")
+                raise HTTPException(status_code=400,detail="error c")
         try:
             cursor.execute("update missions set status = %s where id = %s ",(status,id))
             conn.commit()
@@ -189,7 +189,7 @@ class MissionDB:
             conn.close()
 
 
-    def risk_level(self,number):
+    def check_risk_level(self,number:int):
         if 0 <= number <= 9:
             return "low" 
         elif 10 <= number <= 17:
