@@ -22,7 +22,7 @@ intelligence-task-manager/
 
 ## Agent table:
 id INT PRIMARY KEY AUTO_INCREMENT,
-name VARCHAR(50),
+name VARCHAR(50) NOT NULL,
 specialty VARCHAR(50),
 is_active BOOLEAN DEFAULT TRUE,
 completed_missions INT DEFAULT 0,
@@ -35,9 +35,9 @@ id INT PRIMARY KEY AUTO_INCREMENT,
 title VARCHAR(50),
 description VARCHAR(100),
 location VARCHAR(50),
-difficulty INT ENUM("1","2","3","4","5","6","7","8","9","10"),
-importance INT ENUM("1","2","3","4","5","6","7","8","9","10"),
-status VARCHAR(50) DEFAULT NEW,
+difficulty INT CHECK (difficulty >= 1 AND  difficulty <= 10),
+importance INT CHECK (difficulty >= 1 AND  difficulty <= 10),
+status VARCHAR(50) DEFAULT "NEW",
 risk_level VARCHAR(50),
 assigned_agent_id INT NULL
 
@@ -47,10 +47,10 @@ assigned_agent_id INT NULL
 
 ## class connection_db:
 The department contains three methods
-one: get_connection ()
+one: get_connection()
 which creates a connection to mysql 
 two: create_database()
-Creates db_Intelligence if it does not exist
+Creates Intelligence_db if it does not exist
 three: creat_table()
 which creates the two tables one for the agents and one for the tasks it does not exist
 
