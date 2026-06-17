@@ -21,7 +21,7 @@ class MissionDB:
             cursor.close()
             conn.close()
 
-    def get_all_agents(self):
+    def get_all_missions(self):
         conn = instance_connection.get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -34,7 +34,7 @@ class MissionDB:
             cursor.close()
             conn.close()
 
-    def get_agent_by_id(self,id):
+    def get_mission_by_id(self,id):
         conn = instance_connection.get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -55,7 +55,7 @@ class MissionDB:
         if not agent:
             raise HTTPException(status_code=400,detail="error")
 
-        count = cursor.execute("select status,count(*) as count from missions where id = %s and status = IN_PROGRESS or status = ASSIGNED"(m_id,))
+        count = cursor.execute("select count(*) as count from missions where id = %s and status =IN_PROGRESS or status= ASSIGNED"(a_id,))
         if count["count"] >= 3:
             raise HTTPException(status_code=400,detail="error")
 
