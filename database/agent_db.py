@@ -1,14 +1,16 @@
 from database.db_connection import DB_connection
-
+from fastapi import HTTPException
 
 instance_connection = DB_connection()
 
 
 class AgentDB:
     def create_agent(self,data):
+        valid = ("junior","senior","commander")
         conn = instance_connection.get_connection()
         cursor = conn.cursor(dictionary=True)
-
+        if data["agent_rank"].lower() not in valid:
+            raise HTTPException(status_code=400,detail="error")
         try:
             sql = "insert into agents (name,specialty,agent_rank) values(%s,%s,%s)"
             result = cursor.execute(sql,(data["name"],data["specialty"],data["agent_rank"]))
