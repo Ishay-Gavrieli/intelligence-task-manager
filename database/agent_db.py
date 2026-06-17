@@ -10,10 +10,10 @@ class AgentDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            sql = "insert into agents (name,specialty,agent_rank) valuse(%s,%s,%s)"
-            cursor.execute(sql,(data["name"],data["specialty"],data["agent_rank"],))
-            conn.commite()
-            return {"message":"success to create agent"}
+            sql = "insert into agents (name,specialty,agent_rank) values(%s,%s,%s)"
+            result = cursor.execute(sql,(data["name"],data["specialty"],data["agent_rank"]))
+            conn.commit()
+            return result
 
         finally:
             cursor.close()
@@ -39,7 +39,7 @@ class AgentDB:
         try:
             cursor.execute("select * from agents where id = %s",(id,))
             result = cursor.fetchone()
-            return result
+            return result if result else None
         
         finally:
             cursor.close()
@@ -53,9 +53,9 @@ class AgentDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            sql = "update agents set name = %s,specialty = %s,is_active = %s,completed_missions = %s,failed_missions = %s,agent_rank = %s, where id = %s"
+            sql = "update agents set name = %s,specialty = %s,is_active = %s,completed_missions = %s,failed_missions = %s,agent_rank = %s where id = %s"
             cursor.execute(sql,(data["name"],data["specialty"],data["is_active"],data["completed_missions"],data["failed_missions"],data["agent_rank"],id))
-            conn.commite()
+            conn.commit()
             return {"message":"success to update agent"}
         finally:
             cursor.close()
@@ -67,8 +67,8 @@ class AgentDB:
 
         try:
             sql = "update agents set is_active = FALSE  where id = %s"
-            cursor.execute(sql,(id))
-            conn.commite()
+            cursor.execute(sql,(id,))
+            conn.commit()
             return {"message":"success to deactivate agent"}
         finally:
             cursor.close()
@@ -81,8 +81,8 @@ class AgentDB:
 
         try:
             sql = "update agents set completed_missions = completed_missions + 1  where id = %s"
-            cursor.execute(sql,(id))
-            conn.commite()
+            cursor.execute(sql,(id,))
+            conn.commit()
             return {"message":"success to increment agent"}
         finally:
             cursor.close()
@@ -94,9 +94,9 @@ class AgentDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            sql = "update agents set completed_missions = completed_missions - 1  where id = %s"
-            cursor.execute(sql,(id))
-            conn.commite()
+            sql = "update agents set failed_missions = failed_missions + 1  where id = %s"
+            cursor.execute(sql,(id,))
+            conn.commit()
             return {"message":"success to increment failde agent"}
         finally:
             cursor.close()
@@ -112,7 +112,7 @@ class AgentDB:
             return {"completed":result["completed"],
                     "failed":result["failed"],
                     "total":result["completed"] + result["failed"],
-                    "success_rate": (result["completed"] + result["failed"]) / result["completed"]}
+                    "success_rate":(result["completed"] / (result["completed"] + result["failed"])) * 100}
         
         finally:
             cursor.close()
