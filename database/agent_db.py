@@ -13,7 +13,10 @@ class AgentDB:
             raise HTTPException(status_code=400,detail="error")
         try:
             sql = "insert into agents (name,specialty,agent_rank) values(%s,%s,%s)"
-            result = cursor.execute(sql,(data["name"],data["specialty"],data["agent_rank"]))
+            cursor.execute(sql,(data["name"],data["specialty"],data["agent_rank"]))
+            last_id = cursor.lastrowid
+            cursor.execute("select * from agents where id = %s",(last_id,))
+            result = cursor.fetchone()
             conn.commit()
             return result
 
@@ -109,12 +112,17 @@ class AgentDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            cursor.execute("select completed_missions as completed,failed_missions as failed,count(*) as count from agents where id = %s",(id,))
-            result = cursor.fetchall()
-            return {"completed":result[0]["completed"],
-                    "failed":result[0]["failed"],
-                    "total":result[0]["completed"] + result[0]["failed"],
-                    "success_rate":(result[0]["completed"] / (result[0]["completed"] + result[0]["failed"])) * 100}
+            cursor.execute("select completed_missions as completed,failed_missions as failed from agents where id = %s",(id,))
+            result = cursor.fetchone()
+            rate = (result["completed"] / (result["completed"] + result["failed"])) * 100
+            if rate > 0:
+                rate = rate
+            else:
+                rate = 0
+            return {"completed":result["completed"],
+                    "failed":result["failed"],
+                    "total":result["completed"] + result["failed"],
+                    "success_rate": rate}
         
         finally:
             cursor.close()
@@ -127,9 +135,9 @@ class AgentDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            cursor.execute("select * from agents where is_active = TRUE")
-            result = cursor.fetchall()
-            return result
+            cursor.execute("select count(*) from agents where is_active = TRUE")
+            result = cursor.fetchone()
+            return result["count"]
         
         finally:
             cursor.close()
