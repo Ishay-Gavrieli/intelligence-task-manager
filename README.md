@@ -9,6 +9,7 @@ The system needs to add a task to the agent, change his status, count tasks by l
 # The folder structure:
 
 intelligence-task-manager/
+├── main.py 
 ├── database/
 │   ├── db_connection.py
 │   ├── agent_db.py
