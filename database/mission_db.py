@@ -74,7 +74,7 @@ class MissionDB:
              raise HTTPException(status_code=400,detail="error d")
 
         try:
-            cursor.execute("update missions set status = ASSIGNED assigned_agent_id = %s where id = %s ",(a_id,m_id))
+            cursor.execute("update missions set status = 'ASSIGNED', assigned_agent_id = %s where id = %s",(a_id,m_id))
             conn.commit()
             return {"message":"success"}
         
@@ -86,7 +86,8 @@ class MissionDB:
     def update_mission_status(self,id, status):
         conn = instance_connection.get_connection()
         cursor = conn.cursor(dictionary=True)
-        status = cursor.execute("select status as status from missions where id = %s",(id,))
+        cursor.execute("select status as status from missions where id = %s",(id,))
+        status = cursor.fetchone()
         if status["status"] == "ASSIGNED":
             if status["status"] != "IN_PROGRESS":
                 raise HTTPException(status_code=400,detail="error a")
@@ -97,7 +98,7 @@ class MissionDB:
             if status["status"] != "IN_PROGRESS":
                 raise HTTPException(status_code=400,detail="error c")
         try:
-            cursor.execute("update missions set status = %s where id = %s ",(status,id))
+            cursor.execute("update missions set status = %s where id = %s",(status,id))
             conn.commit()
             return {"message":"success"}
         
@@ -127,7 +128,7 @@ class MissionDB:
 
         try:
             cursor.execute("select count(*) as count from missions")
-            result = cursor.fetchall()
+            result = cursor.fetchone()
             return result["count"]
         
         finally:
@@ -142,7 +143,7 @@ class MissionDB:
 
         try:
             cursor.execute("select count(*) as count from missions where status = %s",(status,))
-            result = cursor.fetchall()
+            result = cursor.fetchone()
             return result["count"]
         
         finally:
@@ -156,8 +157,8 @@ class MissionDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            cursor.execute("select count(*) as count from missions where status = NEW")
-            result = cursor.fetchall()
+            cursor.execute("select count(*) as count from missions where status = 'NEW'")
+            result = cursor.fetchone()
             return result["count"]
         
         finally:
@@ -170,8 +171,8 @@ class MissionDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            cursor.execute("select count(*) as count from missions where risk_level = CRITICAL")
-            result = cursor.fetchall()
+            cursor.execute("select count(*) as count from missions where risk_level = 'CRITICAL'")
+            result = cursor.fetchone()
             return result["count"]
         
         finally:
