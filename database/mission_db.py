@@ -66,17 +66,20 @@ class MissionDB:
             
             
             
-            cursor.execute("select count(*) as count from missions where id = %s and status in('IN_PROGRESS','ASSIGNED')",(agent_id,))
-            count = cursor.fetchone()
-            if count["count"] >= 3:
-                raise HTTPException(status_code=400,detail="Agent has reached maximum missions ")
+            cursor.execute("select count(*) as count from missions where assigned_agent_id = %s and status in('IN_PROGRESS','ASSIGNED')",(agent_id,))
+            count = cursor.fetchall()
+            if count[0]["count"] >= 3:
+                raise HTTPException(status_code=400,detail="Agent has reached maximum missions")
 
             cursor.execute("select risk_level as level from missions where id = %s",(id,))
             level = cursor.fetchone()
             if level["level"].lower() == "critical":
-                rank = cursor.execute("select agent_rank as rank from agents where id = %s",(agent_id,))
-                if rank["rank"] != "Commander":
-                    raise HTTPException(status_code=400,detail="Only Commander can handle critica missions")
+                sql = "select agent_rank from agents where id = %s"
+                cursor.execute(sql,(agent_id,))
+                rank = cursor.fetchone()
+                print(rank)
+                if rank["agent_rank"].lower() != "commander":
+                    raise HTTPException(status_code=400,detail="Only Commander can handle critical missions")
             
             cursor.execute("select status as status from missions where id = %s",(id,))
             status = cursor.fetchone()
