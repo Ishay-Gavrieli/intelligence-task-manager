@@ -179,7 +179,7 @@ class MissionDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            cursor.execute("select count(*) as count from missions where status in ('IN_PROGRESS','ASSIGNED')")
+            cursor.execute("select count(*) as count from missions where status in ('IN_PROGRESS','ASSIGNED','NEW')")
             result = cursor.fetchone()
             return result["count"]
         
