@@ -13,9 +13,11 @@ class AgentDB:
         if data["agent_rank"].lower() not in valid:
             logger.error(f"error agent rank is not valid {data["agent_rank"]}")
             raise HTTPException(status_code=400,detail="error agent rank is not valid")
+        else:
+            rank = data["agent_rank"].lower()
         try:
             sql = "insert into agents (name,specialty,agent_rank) values(%s,%s,%s)"
-            cursor.execute(sql,(data["name"],data["specialty"],data["agent_rank"]))
+            cursor.execute(sql,(data["name"],data["specialty"],rank))
             last_id = cursor.lastrowid
             cursor.execute("select * from agents where id = %s",(last_id,))
             result = cursor.fetchone()

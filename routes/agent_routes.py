@@ -10,11 +10,18 @@ agent_router = APIRouter()
 @agent_router.post("")
 def create_agent(data:dict):
     logger.info("POST /agents called")
-    if not data:
-        logger.error("there is not data")
-        raise HTTPException(status_code=400,detail="there is not data")
+
     try:
-        return instance_agent.create_agent(data)
+        result = instance_agent.create_agent(data)
+        if result:
+            logger.info("success to create agent")
+            return result
+        logger.error(f"failde to create agent")
+        raise HTTPException(status_code=400,detail="bad data")
+    
+
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"error{e}")
         raise HTTPException(status_code=500,detail="internal server error")
@@ -25,7 +32,15 @@ def all_agents():
     logger.info("get / all agents")
 
     try:
-        return instance_agent.get_all_agents()
+        result = instance_agent.get_all_agents()
+        if result:
+            logger.info("success to get all agents")
+            return result
+        logger.error(f"failde to get all agents")
+        raise HTTPException(status_code=400,detail="failed")
+      
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"error{e}")
         raise HTTPException(status_code=500,detail="internal server error")
@@ -35,11 +50,16 @@ def all_agents():
 @agent_router.get("/{id}")
 def agent_by_id(id:int):
     logger.info("get / get agent by id")
-    if not id:
-        raise HTTPException(status_code=400,detail="there is not id")
     try:
-
-        return instance_agent.get_agent_by_id(id)
+        result = instance_agent.get_agent_by_id(id)
+        if result:
+            logger.info("success to get agent by id ")
+            return result
+        logger.error(f"failde to get agent")
+        raise HTTPException(status_code=400,detail="failed")
+      
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"error{e}")
         raise HTTPException(status_code=500,detail="internal server error")
@@ -48,10 +68,17 @@ def agent_by_id(id:int):
 @agent_router.put("/{id}")
 def update_agent_by_id(id:int,data:dict):
     logger.info("put / update_agent_by_id")
-    if not id:
-        raise HTTPException(status_code=400,detail="there is not id")
+ 
     try:
-        return instance_agent.update_agent(id,data)
+        result = instance_agent.update_agent(id,data)
+        if result:
+            logger.info("success to update agent by id ")
+            return result
+        logger.error(f"failde to update agent")
+        raise HTTPException(status_code=400,detail="failed")
+    
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"error{e}")
         raise HTTPException(status_code=500,detail="internal server error")
@@ -61,10 +88,17 @@ def update_agent_by_id(id:int,data:dict):
 @agent_router.put("/{id}/deactivate")
 def deactivate_agent_by_id(id:int):
     logger.info("put / deactivate_agent_by_id")
-    if not id:
-        raise HTTPException(status_code=400,detail="there is not id")
+
     try:
-        return instance_agent.deactivate_agent(id)
+        result = instance_agent.deactivate_agent(id)
+        if result:
+            logger.info("success to deactivate_agent_by_id")
+            return result
+        logger.error(f"failde to deactivate_agent_by_id")
+        raise HTTPException(status_code=400,detail="failed")
+
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"error{e}")
         raise HTTPException(status_code=500,detail="internal server error")
@@ -73,10 +107,17 @@ def deactivate_agent_by_id(id:int):
 @agent_router.get("/{id}/performance")
 def agent_performance_by_id(id:int):
     logger.info("put / agent_performance_by_id")
-    if not id:
-        raise HTTPException(status_code=400,detail="there is not id")
+
     try:
-        return instance_agent.get_agent_performance(id)
+        result = instance_agent.get_agent_performance(id)
+        if result:
+            logger.info("success to agent_performance_by_id")
+            return result
+        logger.error(f"failde to agent_performance_by_id")
+        raise HTTPException(status_code=400,detail="failed")
+        
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"error{e}")
         raise HTTPException(status_code=500,detail="internal server error")

@@ -7,14 +7,15 @@ instance_connection = DB_connection()
 
 class MissionDB:
     def create_mission(self,data:dict):
-        conn = instance_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
-        risk_level = data["difficulty"] * 2 + data["importance"]
-        risk = self.check_risk_level(risk_level)
-        valid = ["NEW","ASSIGNED","IN_PROGRESS","COMPLETED","FAILED","CANCELLED"]
-        if data["status"] not in valid:
-            raise HTTPException(status_code=400,detail="the status not valid")
         try:
+            conn = instance_connection.get_connection()
+            cursor = conn.cursor(dictionary=True)
+            risk_level = data["difficulty"] * 2 + data["importance"]
+            risk = self.check_risk_level(risk_level)
+            valid = ["NEW","ASSIGNED","IN_PROGRESS","COMPLETED","FAILED","CANCELLED"]
+            if data["status"] not in valid:
+                raise HTTPException(status_code=400,detail="the status not valid")
+        
             sql = "insert into missions(title,description,location,difficulty,importance,status,risk_level) values(%s,%s,%s,%s,%s,%s,%s)"
             cursor.execute(sql,(data["title"],data["description"],data["location"],data["difficulty"],data["importance"],data["status"],risk))
             conn.commit()
@@ -51,39 +52,44 @@ class MissionDB:
             conn.close()
 
 
-    def assign_mission(self,m_id, a_id):
-        conn = instance_connection.get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("select is_active from agents where id = %s",(a_id,))
-        agent = cursor.fetchone()
-        if not agent["is_active"]:
-                raise HTTPException(status_code=400,detail="Agent is not active")
-        
-        if not agent:
-                raise HTTPException(status_code=400,detail="Agent not found")
-        
-        cursor.execute("select count(*) as count from missions where id = %s and status in('IN_PROGRESS','ASSIGNED')",(a_id,))
-        count = cursor.fetchone()
-        if count["count"] >= 3:
-            raise HTTPException(status_code=400,detail="Agent has reached maximum missions ")
-
-        cursor.execute("select risk_level as level from missions where id = %s",(m_id,))
-        level = cursor.fetchone()
-        if level["level"].lower() == "critical":
-            rank = cursor.execute("select agent_rank as rank from agents where id = %s",(a_id,))
-            if rank["rank"] != "Commander":
-                raise HTTPException(status_code=400,detail="Only Commander can handle critica missions")
-        
-        cursor.execute("select status as status from missions where id = %s",(m_id,))
-        status = cursor.fetchone()
-        if status["status"] != "NEW":
-             raise HTTPException(status_code=400,detail="Mission not available")
-
-        if not status:
-             raise HTTPException(status_code=400,detail="Mission not found")
-        
+    def assign_mission(self,id, agent_id):
         try:
-            cursor.execute("update missions set status = 'ASSIGNED', assigned_agent_id = %s where id = %s",(a_id,m_id))
+            conn = instance_connection.get_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("select is_active from agents where id = %s",(agent_id,))
+            agent = cursor.fetchone()
+            if not agent:
+                    raise HTTPException(status_code=400,detail="Agent not found")
+            
+            if not agent["is_active"]:
+                    raise HTTPException(status_code=400,detail="Agent is not active")
+            
+            
+            
+            cursor.execute("select count(*) as count from missions where id = %s and status in('IN_PROGRESS','ASSIGNED')",(agent_id,))
+            count = cursor.fetchone()
+            if count["count"] >= 3:
+                raise HTTPException(status_code=400,detail="Agent has reached maximum missions ")
+
+            cursor.execute("select risk_level as level from missions where id = %s",(id,))
+            level = cursor.fetchone()
+            if level["level"].lower() == "critical":
+                rank = cursor.execute("select agent_rank as rank from agents where id = %s",(agent_id,))
+                if rank["rank"] != "Commander":
+                    raise HTTPException(status_code=400,detail="Only Commander can handle critica missions")
+            
+            cursor.execute("select status as status from missions where id = %s",(id,))
+            status = cursor.fetchone()
+            if not status:
+                raise HTTPException(status_code=400,detail="Mission not found")
+            
+            if status["status"] != "NEW":
+                raise HTTPException(status_code=400,detail="Mission not available")
+
+            
+            
+            
+            cursor.execute("update missions set status = 'ASSIGNED', assigned_agent_id = %s where id = %s",(agent_id,id))
             conn.commit()
             return {"message":"success"}
         
@@ -102,8 +108,8 @@ class MissionDB:
             if result["status"] != "ASSIGNED":
                 raise HTTPException(status_code=400,detail="error a")
             
-        if status  == "CANCELLED":
-            if result["status"] != "NEW" or result["status"] != "ASSIGNED":
+        if status  == "CANCELED":
+            if result["status"] != "NEW" and result["status"] != "ASSIGNED":
                 raise HTTPException(status_code=400,detail="error b")
             
         if status == "FAILED" or status == "COMPLETED":
