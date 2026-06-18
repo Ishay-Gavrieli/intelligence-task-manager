@@ -1,5 +1,6 @@
 from database.db_connection import DB_connection
 from fastapi import HTTPException
+from logs.basic_log import logger
 
 instance_connection = DB_connection()
 

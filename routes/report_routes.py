@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 from database.mission_db import MissionDB
 from database.agent_db import AgentDB
+from logs.basic_log import logger
+
 
 instance_agent = AgentDB()
 
@@ -24,7 +26,8 @@ def summary_all():
 
 @reports_router.get("/missions-by-status")
 def missions_by_status():
-    return { "open": instance_missions.count_open_missions(),
+    return { "new": instance_missions.count_by_status(status="NEW"),
+            "assigned":instance_missions.count_by_status(status="ASSIGNED"),
             "in_progress": instance_missions.count_by_status(status="IN_PROGRESS"),
             "completed": instance_missions.count_by_status(status="completed"),
             "failed": instance_missions.count_by_status(status="failed"),

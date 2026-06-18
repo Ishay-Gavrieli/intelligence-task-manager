@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from database.mission_db import MissionDB
+from logs.basic_log import logger
 
 instance_missions = MissionDB()
 
