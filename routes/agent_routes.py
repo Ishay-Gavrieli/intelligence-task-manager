@@ -22,7 +22,7 @@ def create_agent(data:dict):
 
 @agent_router.get("")
 def all_agents():
-    logger.info("getT / all agents")
+    logger.info("get / all agents")
 
     try:
         return instance_agent.get_all_agents()
@@ -34,7 +34,7 @@ def all_agents():
 
 @agent_router.get("/{id}")
 def agent_by_id(id:int):
-    logger.info("getT / get agent by id")
+    logger.info("get / get agent by id")
     if not id:
         raise HTTPException(status_code=400,detail="there is not id")
     try:
