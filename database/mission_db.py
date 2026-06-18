@@ -10,7 +10,9 @@ class MissionDB:
         cursor = conn.cursor(dictionary=True)
         risk_level = data["difficulty"] * 2 + data["importance"]
         risk = self.check_risk_level(risk_level)
-
+        valid = ["NEW","ASSIGNED","IN_PROGRESS","COMPLETED","FAILED","CANCELLED"]
+        if data["status"] not in valid:
+            raise HTTPException(status_code=400,detail="the status not valid")
         try:
             sql = "insert into missions(title,description,location,difficulty,importance,status,risk_level) values(%s,%s,%s,%s,%s,%s,%s)"
             cursor.execute(sql,(data["title"],data["description"],data["location"],data["difficulty"],data["importance"],data["status"],risk))
@@ -53,26 +55,32 @@ class MissionDB:
         cursor = conn.cursor(dictionary=True)
         cursor.execute("select is_active from agents where id = %s",(a_id,))
         agent = cursor.fetchone()
-        if not agent or agent["is_active"]:
-                raise HTTPException(status_code=400,detail="error a")
-
+        if not agent["is_active"]:
+                raise HTTPException(status_code=400,detail="Agent is not active")
+        
+        if not agent:
+                raise HTTPException(status_code=400,detail="Agent not found")
+        
         cursor.execute("select count(*) as count from missions where id = %s and status in('IN_PROGRESS','ASSIGNED')",(a_id,))
         count = cursor.fetchone()
         if count["count"] >= 3:
-            raise HTTPException(status_code=400,detail="error b")
+            raise HTTPException(status_code=400,detail="Agent has reached maximum missions ")
 
         cursor.execute("select risk_level as level from missions where id = %s",(m_id,))
         level = cursor.fetchone()
-        if level["level"] == "CRITICAL":
+        if level["level"].lower() == "critical":
             rank = cursor.execute("select agent_rank as rank from agents where id = %s",(a_id,))
             if rank["rank"] != "Commander":
-                raise HTTPException(status_code=400,detail="error c")
+                raise HTTPException(status_code=400,detail="Only Commander can handle critica missions")
         
         cursor.execute("select status as status from missions where id = %s",(m_id,))
         status = cursor.fetchone()
         if status["status"] != "NEW":
-             raise HTTPException(status_code=400,detail="error d")
+             raise HTTPException(status_code=400,detail="Mission not available")
 
+        if not status:
+             raise HTTPException(status_code=400,detail="Mission not found")
+        
         try:
             cursor.execute("update missions set status = 'ASSIGNED', assigned_agent_id = %s where id = %s",(a_id,m_id))
             conn.commit()
@@ -87,16 +95,20 @@ class MissionDB:
         conn = instance_connection.get_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("select status as status from missions where id = %s",(id,))
-        status = cursor.fetchone()
-        if status["status"] == "ASSIGNED":
-            if status["status"] != "IN_PROGRESS":
+        result = cursor.fetchone()
+
+        if status == "IN_PROGRESS":
+            if result["status"] != "ASSIGNED":
                 raise HTTPException(status_code=400,detail="error a")
-        if status["status"] == "CANCELLED":
-            if status["status"] != "NEW" or status["status"] != "ASSIGNED":
+            
+        if status  == "CANCELLED":
+            if result["status"] != "NEW" or result["status"] != "ASSIGNED":
                 raise HTTPException(status_code=400,detail="error b")
-        if status["status"] == "failed" or status["status"] == status["status"]:
-            if status["status"] != "IN_PROGRESS":
+            
+        if status == "FAILED" or status == "COMPLETED":
+            if result["status"] != "IN_PROGRESS":
                 raise HTTPException(status_code=400,detail="error c")
+        
         try:
             cursor.execute("update missions set status = %s where id = %s",(status,id))
             conn.commit()
@@ -157,7 +169,7 @@ class MissionDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            cursor.execute("select count(*) as count from missions where status = 'NEW'")
+            cursor.execute("select count(*) as count from missions where status in ('IN_PROGRESS','ASSIGNED')")
             result = cursor.fetchone()
             return result["count"]
         
@@ -185,7 +197,7 @@ class MissionDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            cursor.execute("select name from agents order by completed_missions desc limit 1")
+            cursor.execute("select * from agents order by completed_missions desc limit 1")
             result = cursor.fetchone()
             return result
         

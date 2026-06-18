@@ -122,7 +122,7 @@ class AgentDB:
             return {"completed":result["completed"],
                     "failed":result["failed"],
                     "total":result["completed"] + result["failed"],
-                    "success_rate": rate}
+                    "success_rate": round(rate)}
         
         finally:
             cursor.close()
@@ -135,7 +135,7 @@ class AgentDB:
         cursor = conn.cursor(dictionary=True)
 
         try:
-            cursor.execute("select count(*) from agents where is_active = TRUE")
+            cursor.execute("select count(*) as count from agents where is_active = TRUE")
             result = cursor.fetchone()
             return result["count"]
         
