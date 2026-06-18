@@ -106,15 +106,15 @@ class MissionDB:
 
         if status == "IN_PROGRESS":
             if result["status"] != "ASSIGNED":
-                raise HTTPException(status_code=400,detail="error a")
+                raise HTTPException(status_code=400,detail=f"error you can not start mission in id {id}")
             
         if status  == "CANCELED":
             if result["status"] != "NEW" and result["status"] != "ASSIGNED":
-                raise HTTPException(status_code=400,detail="error b")
+                raise HTTPException(status_code=400,detail=f"error you can not canceled mission in id {id}")
             
         if status == "FAILED" or status == "COMPLETED":
             if result["status"] != "IN_PROGRESS":
-                raise HTTPException(status_code=400,detail="error c")
+                raise HTTPException(status_code=400,detail=f"error you can not failed or complete mission in id {id}")
         
         try:
             cursor.execute("update missions set status = %s where id = %s",(status,id))
